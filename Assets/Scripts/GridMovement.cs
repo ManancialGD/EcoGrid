@@ -20,7 +20,8 @@ public class GridMovement : MonoBehaviour
             // Convert mouse position to world coordinates and round to nearest integers for grid movement
             targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             targetPos = new Vector3(Mathf.Round(targetPos.x), Mathf.Round(targetPos.y), transform.position.z);
-
+            
+            if (targetPos == transform.position) return;
             isMovingToTarget = true;
         }
 
