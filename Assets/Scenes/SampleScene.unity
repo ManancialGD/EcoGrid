@@ -317,10 +317,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c38db53132bee446b4952c166f25e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xLimit: {x: -14.6, y: 12.4}
-  yLimit: {x: -17.5, y: 125}
-  sensibility: 0.015
-  mouseDown: 1
+  xLimit: {x: -23.5, y: 21.5}
+  yLimit: {x: -22.5, y: 9.5}
+  cameraSizeLimit: {x: 1, y: 6}
+  mouseDown: 0
   debugColour: {r: 0, g: 0, b: 1, a: 1}
 --- !u!1 &619394800
 GameObject:
@@ -503,6 +503,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isMoving: 0
   timeToMove: 0.2
+  moveDelay: 0.2
+  isMovingToTarget: 0
 --- !u!1 &2005586384
 GameObject:
   m_ObjectHideFlags: 0

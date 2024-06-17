@@ -4,71 +4,93 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    [Header("CameraConfiguration")]
+    Camera cam;
+
+    [Header("Camera Configuration")]
     [Header("Camera Limit (min, max)")]
     [SerializeField] private Vector2 xLimit; // Vector2(Xmin, Xmax)
     [SerializeField] private Vector2 yLimit; // Vector2(Ymin, Ymax)
+    [SerializeField] private Vector2 cameraSizeLimit;
 
-    [Header("Sensibility")]
-
-    [SerializeField] private float sensibility = 0.01f;
     [Space]
 
     [Header("Bools")]
     [SerializeField] private bool mouseDown;
 
-    // This is for debugging, so it will run this only if you are in the editor
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [Space]
 
     [Header("Debug")]
     [SerializeField] Color debugColour = Color.blue;
-    #endif
+#endif
 
-    private Vector3 initialMousePosition;
-    private Vector3 initialCameraPosition;
+    private Vector3 dragOrigin;
+
+    private void Awake()
+    {
+        cam = Camera.main;
+        if (cam == null) Debug.LogError("Camera is null");
+    }
 
     private void Update()
     {
         Move();
+        ScaleCam();
     }
 
     private void Move()
     {
         if (Input.GetButtonDown("CameraMove"))
         {
-            mouseDown = true;
-            initialMousePosition = Input.mousePosition;
-            initialCameraPosition = transform.position;
+            dragOrigin = cam.ScreenToWorldPoint(Input.mousePosition);
         }
-        else if (Input.GetButtonUp("CameraMove"))
+        else if (Input.GetButton("CameraMove"))
         {
-            mouseDown = false;
-        }
+            Vector3 difference = dragOrigin - cam.ScreenToWorldPoint(Input.mousePosition);
 
-        if (mouseDown)
-        {
-            Vector3 currentMousePosition = Input.mousePosition;
-            Vector3 difference = currentMousePosition - initialMousePosition;
-
-            Vector3 targetPosition = initialCameraPosition - new Vector3(difference.x, difference.y, 0) * sensibility;
-
-            // Clamp the target position within the specified limits
-            float clampedX = Mathf.Clamp(targetPosition.x, xLimit.x, xLimit.y);
-            float clampedY = Mathf.Clamp(targetPosition.y, yLimit.x, yLimit.y);
-            float clampedZ = transform.position.z; // Maintain current z-position
-
-            Vector3 clampedPosition = new Vector3(clampedX, clampedY, clampedZ);
-            transform.position = clampedPosition;
+            transform.position = ClampCamera(transform.position + difference);
         }
     }
 
-    /// <summary>
-    /// This will draw a box with the limits on the scene.
-    /// </summary>
+    private void ScaleCam()
+    {
+        if (Input.mouseScrollDelta.y > 0f)
+        {
+            if (cam.orthographicSize > cameraSizeLimit.x)
+            {
+                cam.orthographicSize -= .5f;
+                transform.position = ClampCamera(transform.position);
+            }
+        }
+        else if (Input.mouseScrollDelta.y < 0f)
+        {
+            if (cam.orthographicSize < cameraSizeLimit.y)
+            {
+                cam.orthographicSize += .5f;
+                transform.position = ClampCamera(transform.position);
+            }
+        }
+    }
+
+    private Vector3 ClampCamera(Vector3 targetPosition)
+    {
+        float camHeight = cam.orthographicSize;
+        float camWidth = cam.orthographicSize * cam.aspect;
+
+        float minX = xLimit.x + camWidth;
+        float maxX = xLimit.y - camWidth;
+
+        float minY = yLimit.x + camHeight;
+        float maxY = yLimit.y - camHeight;
+
+        float newX = Mathf.Clamp(targetPosition.x, minX, maxX);
+        float newY = Mathf.Clamp(targetPosition.y, minY, maxY);
+
+        return new Vector3(newX, newY, targetPosition.z);
+    }
+
     private void OnDrawGizmos()
     {
-        Camera cam = GetComponent<Camera>();
         if (cam == null)
         {
             cam = Camera.main;
@@ -77,14 +99,13 @@ public class CameraFollow : MonoBehaviour
 
         Gizmos.color = debugColour;
 
-        // Calculate the center and size of the rectangle, adjusted for camera size
-        float camHeight = cam.orthographicSize * 2;
-        float camWidth = camHeight * cam.aspect;
+        // Draw the camera limits as wireframe boxes
+        float camHeight = cam.orthographicSize;
+        float camWidth = cam.orthographicSize * cam.aspect;
 
-        Vector3 center = new Vector3((xLimit.x + xLimit.y) / 2, (yLimit.x + yLimit.y) / 2, transform.position.z);
-        Vector3 size = new Vector3(xLimit.y - xLimit.x + camWidth, yLimit.y - yLimit.x + camHeight, 1);
-
-        // Draw the wireframe cube
+        Vector3 center = new Vector3((xLimit.x + xLimit.y) / 2f, (yLimit.x + yLimit.y) / 2f, 0f);
+        Vector3 size = new Vector3(xLimit.y - xLimit.x, yLimit.y - yLimit.x, 0f);
+        
         Gizmos.DrawWireCube(center, size);
     }
 }
