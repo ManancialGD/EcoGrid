@@ -1,31 +1,46 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.IO.Compression;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField] private int _width, _height;
-    [SerializeField] private Tile _tilePrefab;
+    [SerializeField] private int width, height;
 
-    [SerializeField] private Transform _cam;
+    [SerializeField] private GameObject grassPrefab;
+    [SerializeField] private GameObject dirtPrefab;
+    [SerializeField] private GameObject waterPrefab;
 
     private void Start()
     {
         GenerateGrid();
     }
+
     void GenerateGrid()
     {
-        for (int x = 0; x < _width; x++)
+        for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y < _height; y++)
+            for (int y = 0; y < height; y++)
             {
-                var spawnedTile = Instantiate(_tilePrefab, new Vector3(x, y), Quaternion.identity);
-                spawnedTile.name = $"Tile {x} {y}";
+                GameObject prefabToInstantiate;
+
+                // Determine which prefab to use based on the grid coordinates
+                if (x % 2 == 0 && y % 2 == 0)
+                {
+                    prefabToInstantiate = grassPrefab;
+                }
+                else if (x % 2 == 1 && y % 2 == 0)
+                {
+                    prefabToInstantiate = dirtPrefab;
+                }
+                else
+                {
+                    prefabToInstantiate = waterPrefab;
+                }
+
+                // Instantiate the prefab at the current grid position
+                GameObject spawnedPrefab = Instantiate(prefabToInstantiate, new Vector3(x, y, 0), Quaternion.identity);
+                spawnedPrefab.name = $"Tile {x} {y}";
             }
         }
-
-        _cam.transform.position = new Vector3((float)_width /2 -.5f, (float)_height /2 -.5f, -10);
     }
 }
