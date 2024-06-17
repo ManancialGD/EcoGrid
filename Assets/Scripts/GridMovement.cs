@@ -1,5 +1,8 @@
 using System.Collections;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Controls grid-based movement of a GameObject towards a target position.
@@ -12,30 +15,53 @@ public class GridMovement : MonoBehaviour
     [SerializeField] private float moveDelay = 0.2f; // Delay between consecutive movements
     [SerializeField] private bool isMovingToTarget; // Flag indicating if currently moving towards the target
 
+    GridMovement[] farmers;
+
+    Tilemap tilemap;
+
+    void Start(){
+        transform.position = new Vector3(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y), 0);
+        tilemap=FindFirstObjectByType<Tilemap>();
+        farmers=FindObjectsOfType<GridMovement>();
+        farmers=farmers.Where(GM => GM != this).ToArray();
+    }
     void Update()
     {
         // Check for input to initiate movement if not already moving
-        if (Input.GetButtonDown("Click1") && !isMoving)
-        {
-            // Convert mouse position to world coordinates and round to nearest integers for grid movement
-            targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            targetPos = new Vector3(Mathf.Round(targetPos.x), Mathf.Round(targetPos.y), transform.position.z);
+        // if (Input.GetButtonDown("Click1") && !isMoving)
+        // {
+        //     // Convert mouse position to world coordinates and round to nearest integers for grid movement
+        //     targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //     targetPos = new Vector3(Mathf.Round(targetPos.x), Mathf.Round(targetPos.y), transform.position.z);
             
-            if (targetPos == transform.position) return;
-            isMovingToTarget = true;
-        }
+        //     if (targetPos == transform.position) return;
+        //     isMovingToTarget = true;
+        // }
 
-        // Check if currently moving towards the target
-        if (isMovingToTarget)
-        {
-            // Start movement towards the next step in the path if not already moving
-            if (!isMoving)
-            {
-                // Determine direction towards the next step in the movement path
-                Vector3 direction = GetNextStepDirection(transform.position, targetPos);
-                nextStepPos = transform.position + direction;
-                StartCoroutine(Move(direction));
+        // // Check if currently moving towards the target
+        // if (isMovingToTarget)
+        // {
+        //     // Start movement towards the next step in the path if not already moving
+        //     if (!isMoving)
+        //     {
+        //         // Determine direction towards the next step in the movement path
+        //         Vector3 direction = GetNextStepDirection(transform.position, targetPos);
+        //         nextStepPos = transform.position + direction;
+        //         StartCoroutine(Move(direction));
+        //     }
+        // }
+
+        if (!isMoving){
+            int x = UnityEngine.Random.Range(-1, 2);
+            int y = UnityEngine.Random.Range(-1, 2);
+            foreach (GridMovement farmer in farmers){
+                if (farmer.transform.position.x == transform.position.x+x && farmer.transform.position.y == transform.position.y+y){
+                    x = 0;
+                    y = 0;
+                    break;
+                }
             }
+            StartCoroutine(Move(new Vector3(x, y, 0)));
         }
     }
 
