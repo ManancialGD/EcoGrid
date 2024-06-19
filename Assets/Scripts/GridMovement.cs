@@ -19,9 +19,8 @@ public class GridMovement : MonoBehaviour
 
     private List<Vector3> gizmoPoints = new List<Vector3>();
     private Queue<Vector3> stepsToTarget = new Queue<Vector3>();
-    GridMovement[] farmers;
-    CellTile.CellType cellType;
-    GridManager gridManager;
+    private GridMovement[] farmers;
+    private GridManager gridManager;
 
     Vector3 debugLinePos;
     Vector3 debugLineTargetPos;
@@ -37,6 +36,7 @@ public class GridMovement : MonoBehaviour
     {
         ClickToMove();
     }
+
     private void ClickToMove()
     {
         // Check for input to initiate movement if not already moving
@@ -55,12 +55,16 @@ public class GridMovement : MonoBehaviour
         if (isMovingToTarget)
         {
             // Start movement towards the next step in the path if not already moving
-            if (!isMoving)
+            if (!isMoving && stepsToTarget.Count > 0)
             {
                 nextStepPos = stepsToTarget.Dequeue();
 
-                // This will check if the tile he is moving to is none, so it doesn't move.
-                if (gridManager.GetCellTypeInLocation(nextStepPos) == CellTile.CellType.none)/* Find another alternative */ return;
+                if (gridManager.GetCellTypeInLocation(nextStepPos) == CellTile.CellType.water ||
+                    gridManager.GetCellTypeInLocation(nextStepPos) == CellTile.CellType.none)
+                {   // Avoid obstruction.
+                    StartCoroutine(FindAPathWithoutObstruction(nextStepPos));
+                    stepsToTarget.Clear();
+                }
                 else
                 {
                     StartCoroutine(Move(nextStepPos));
@@ -75,41 +79,59 @@ public class GridMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// This apply the Bresenham Algorithm to calculate each moviment and add all to a queue to return, the algorithm works based on the simple line function f(x) =ax+b, where 
+    /// Applies the Bresenham Algorithm to generate a queue of steps between two positions on a grid.
+    /// The algorithm calculates each step using integer-based arithmetic to efficiently find
+    /// the points along the line from startPos to endPos.
+    /// 
+    /// The method initializes with rounded start (x0, y0) and end (x1, y1) positions. It calculates
+    /// differences (dx, dy) and step directions (sx, sy) between these positions. An error variable
+    /// (err) adjusts based on the differences, and it uses a loop to determine each point along the
+    /// line using Bresenham's line algorithm. Points are added to the steps queue and gizmoPoints list
+    /// for visualization.
     /// </summary>
-    /// <param name="currentPos">This is the start position for the Bresenham line</param>
-    /// <param name="endPos">This is the end position</param>
-    /// <returns>A Queue that has every steps between the start pos and end pos using Bresenham function</returns>
+    /// <param name="startPos">Starting position for the Bresenham line.</param>
+    /// <param name="endPos">Ending position for the Bresenham line.</param>
+    /// <returns>A queue containing each step along the Bresenham line from start to end positions.</returns>
     private Queue<Vector3> Bresenham(Vector3 startPos, Vector3 endPos)
     {
         Queue<Vector3> steps = new Queue<Vector3>();
 
+        // Prepare for line visualization
         shouldDrawLine = true;
         gizmoPoints.Clear();
         debugLinePos = startPos;
         debugLineTargetPos = endPos;
 
+        // Round positions to nearest integers
         int x0 = Mathf.RoundToInt(startPos.x);
         int y0 = Mathf.RoundToInt(startPos.y);
         int x1 = Mathf.RoundToInt(endPos.x);
         int y1 = Mathf.RoundToInt(endPos.y);
 
+        // Calculate differences and steps
         int dx = Mathf.Abs(x1 - x0);
         int dy = Mathf.Abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
         int sy = y0 < y1 ? 1 : -1;
         int err = dx - dy;
 
+        int lastX = x0, lastY = y0;
+
+        // Generate points along the line using Bresenham's algorithm
         while (true)
         {
-            steps.Enqueue(new Vector3(x0, y0, 0));
-            gizmoPoints.Add(new Vector3(x0, y0, 0));
+            steps.Enqueue(new Vector3(x0, y0, 0)); // Add current point to steps queue
+            gizmoPoints.Add(new Vector3(x0, y0, 0)); // Add current point for visualization
 
+            lastX = x0;
+            lastY = y0;
+            // Check if we've reached the end point
             if (x0 == x1 && y0 == y1)
                 break;
 
             int e2 = err * 2;
 
+            // Adjust error and move to next point
             if (e2 > -dy)
             {
                 err -= dy;
@@ -121,9 +143,14 @@ public class GridMovement : MonoBehaviour
                 err += dx;
                 y0 += sy;
             }
+
+            if (lastX != x0 && lastY != y0)
+            {
+                steps.Enqueue(new Vector3(lastX, y0, 0));
+            }
         }
 
-        steps.Dequeue(); // This is to remove the first step, that is the same pos as the current pos.
+        steps.Dequeue(); // Remove the starting position from the steps queue
         return steps;
     }
 
@@ -134,12 +161,8 @@ public class GridMovement : MonoBehaviour
 
         Vector3 origPos = transform.position;
         Vector3 targetPosition = direction;
-        Vector3 dPos = targetPosition - origPos;
-        float distance = dPos.x + dPos.y;
-        distance = Mathf.Abs(distance);
-        float timeToMove;
-
-        timeToMove = distance / movementSpeed;
+        float distance = Vector3.Distance(targetPosition, origPos);
+        float timeToMove = distance / movementSpeed;
 
         float elapsedTime = 0;
 
@@ -164,7 +187,94 @@ public class GridMovement : MonoBehaviour
         isMoving = false;
     }
 
-    // Draw the Bersenham line and it's steps
+    private IEnumerator FindAPathWithoutObstruction(Vector3 startPosition)
+    {
+        bool foundAPath = false;
+        int triesX = 0;
+        int triesY = 0;
+        Vector3[] directions = new Vector3[]
+        {
+            Vector3.right,
+            Vector3.left,
+            Vector3.up,
+            Vector3.down
+        };
+
+        while (!foundAPath && triesX < 5 && triesY < 5)
+        {
+            foreach (Vector3 direction in directions)
+            {
+                Vector3 testPositionX = startPosition + (direction * (triesX + 1));
+                Vector3 testPositionY = startPosition + (direction * (triesY + 1));
+
+                if (gridManager.GetCellTypeInLocation(testPositionX) != CellTile.CellType.water &&
+                    gridManager.GetCellTypeInLocation(testPositionX) != CellTile.CellType.none)
+                {
+                    Queue<Vector3> steps = Bresenham(testPositionX, absoluteargetPos);
+                    bool obstructionFound = false;
+
+                    foreach (Vector3 p in steps)
+                    {
+                        if (gridManager.GetCellTypeInLocation(p) == CellTile.CellType.water ||
+                            gridManager.GetCellTypeInLocation(p) == CellTile.CellType.none)
+                        {
+                            obstructionFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!obstructionFound)
+                    {
+                        foundAPath = true;
+                        stepsToTarget = steps;
+                        Debug.Log("Path found without obstructions!");
+                        break;
+                    }
+                }
+
+                if (gridManager.GetCellTypeInLocation(testPositionY) != CellTile.CellType.water &&
+                    gridManager.GetCellTypeInLocation(testPositionY) != CellTile.CellType.none)
+                {
+                    Queue<Vector3> steps = Bresenham(testPositionY, absoluteargetPos);
+                    bool obstructionFound = false;
+
+                    foreach (Vector3 p in steps)
+                    {
+                        if (gridManager.GetCellTypeInLocation(p) == CellTile.CellType.water ||
+                            gridManager.GetCellTypeInLocation(p) == CellTile.CellType.none)
+                        {
+                            obstructionFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!obstructionFound)
+                    {
+                        foundAPath = true;
+                        stepsToTarget = steps;
+                        Debug.Log("Path found without obstructions!");
+                        break;
+                    }
+                }
+            }
+
+            if (!foundAPath)
+            {
+                triesX++;
+                triesY++;
+                yield return null; // Wait a frame before retrying
+            }
+        }
+
+        if (!foundAPath)
+        {
+            Debug.Log("Failed to find a path without obstructions after 5 tries.");
+            isMovingToTarget = false;
+            isMoving = false;
+        }
+    }
+
+    // Draw the Bresenham line and its steps
     void OnDrawGizmos()
     {
         if (shouldDrawLine)
