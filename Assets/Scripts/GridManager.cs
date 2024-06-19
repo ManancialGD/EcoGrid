@@ -1,46 +1,65 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    [SerializeField] private int width, height;
+    [SerializeField] private int width = 128;
+    [SerializeField] private int height = 128;
 
     [SerializeField] private GameObject grassPrefab;
     [SerializeField] private GameObject dirtPrefab;
     [SerializeField] private GameObject waterPrefab;
 
+    [SerializeField] private GameObject[,] matrix;
+
+    CellTile.CellType cellType;
+
     private void Start()
     {
-        GenerateGrid();
+        matrix = new GameObject[height, width];
+
+        GenerateMatrix();
     }
 
-    void GenerateGrid()
+    void GenerateMatrix()
     {
-        for (int x = 0; x < width; x++)
+        for (int y = 0; y < height; y++)
         {
-            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
-                GameObject prefabToInstantiate;
-
-                // Determine which prefab to use based on the grid coordinates
-                if (x % 2 == 0 && y % 2 == 0)
+                if (y % 2 == 0)
                 {
-                    prefabToInstantiate = grassPrefab;
-                }
-                else if (x % 2 == 1 && y % 2 == 0)
-                {
-                    prefabToInstantiate = dirtPrefab;
+                    if (x % 2 == 0) matrix[y, x] = Instantiate(grassPrefab, new Vector3(x, y, 0), Quaternion.identity);
+                    else matrix[y, x] = Instantiate(dirtPrefab, new Vector3(x, y, 0), Quaternion.identity);
                 }
                 else
                 {
-                    prefabToInstantiate = waterPrefab;
+                    if (x % 2 == 0) matrix[y, x] = Instantiate(dirtPrefab, new Vector3(x, y, 0), Quaternion.identity);
+                    else matrix[y, x] = Instantiate(grassPrefab, new Vector3(x, y, 0), Quaternion.identity);
                 }
 
-                // Instantiate the prefab at the current grid position
-                GameObject spawnedPrefab = Instantiate(prefabToInstantiate, new Vector3(x, y, 0), Quaternion.identity);
-                spawnedPrefab.name = $"Tile {x} {y}";
             }
         }
+    }
+    void DestroyMatrix()
+    {
+        foreach (GameObject gameObject in matrix)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public CellTile.CellType GetCellTypeInLocation(Vector3 location)
+    {
+        if (location.y >= 0 && location.x >= 0 && location.x <= width && location.y <= height)
+        {
+            CellTile tile = matrix[(int)location.y, (int)location.x].GetComponent<CellTile>();
+            if (tile != null) return tile.GetCellType();
+            else return CellTile.CellType.none;
+        }
+        else return CellTile.CellType.none;
     }
 }

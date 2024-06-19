@@ -160,11 +160,12 @@ Transform:
   m_GameObject: {fileID: 247811705}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 29.3, y: 25.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2005586385}
+  - {fileID: 1308397230}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &351521737
@@ -196,8 +197,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2913e183d9b96304c9b29c37cda79136, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 16
-  height: 16
+  width: 128
+  height: 128
   grassPrefab: {fileID: 3959402492787805435, guid: 7304a07fff526e34b8af47c4b2893bce, type: 3}
   dirtPrefab: {fileID: 7093381325985241126, guid: 7a17c42b61e868b4c816b727ff08dffa, type: 3}
   waterPrefab: {fileID: 7544891214169397452, guid: 241f68e68ae47dc47aad35295fefa899, type: 3}
@@ -348,7 +349,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 20.6, y: 12.7, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -366,8 +367,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c38db53132bee446b4952c166f25e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xLimit: {x: -23.5, y: 21.5}
-  yLimit: {x: -22.5, y: 9.5}
+  xLimit: {x: -0.5, y: 128.5}
+  yLimit: {x: -0.5, y: 128.5}
   cameraSizeLimit: {x: 1, y: 6}
   mouseDown: 0
   debugColour: {r: 0, g: 0, b: 1, a: 1}
@@ -532,11 +533,11 @@ Transform:
   m_GameObject: {fileID: 1308397228}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -29.3, y: -25.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 247811707}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1308397231
 MonoBehaviour:
@@ -551,9 +552,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isMoving: 0
-  timeToMove: 0.2
+  movementSpeed: 0.25
   moveDelay: 0.2
   isMovingToTarget: 0
+  shouldDrawLine: 0
 --- !u!1 &1957246160
 GameObject:
   m_ObjectHideFlags: 0
@@ -637,9 +639,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isMoving: 0
-  timeToMove: 0.2
+  movementSpeed: 2
   moveDelay: 0.2
   isMovingToTarget: 0
+  shouldDrawLine: 0
 --- !u!4 &1957246163
 Transform:
   m_ObjectHideFlags: 0
@@ -649,7 +652,7 @@ Transform:
   m_GameObject: {fileID: 1957246160}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.96, y: 1.32, z: 0}
+  m_LocalPosition: {x: 20.72, y: 11.96, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15222,6 +15225,5 @@ SceneRoots:
   - {fileID: 519420032}
   - {fileID: 619394802}
   - {fileID: 247811707}
-  - {fileID: 1308397230}
   - {fileID: 1957246163}
   - {fileID: 351521739}

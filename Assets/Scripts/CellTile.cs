@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CellTile : MonoBehaviour
 {
-    public enum CellType { grass, dirt, stone, water, path, }
+    public enum CellType { grass, dirt, stone, water, path, none }
     [SerializeField] private CellType thisCellType;
 
     public CellType GetCellType()
